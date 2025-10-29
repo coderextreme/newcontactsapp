@@ -1,3 +1,4 @@
+/// <reference path="./electron.d.ts" />
 
 import React, { useState, useEffect } from 'react';
 import type { Contact, Meeting, View, Theme } from './types';
@@ -14,6 +15,7 @@ const App: React.FC = () => {
   const [contacts, setContacts] = useLocalStorage<Contact[]>('contacts', []);
   const [meetings, setMeetings] = useLocalStorage<Meeting[]>('meetings', []);
   const [currentView, setCurrentView] = useState<View>('contacts');
+  const [searchTerm, setSearchTerm] = useState('');
 
   // State for modals
   const [isContactFormOpen, setIsContactFormOpen] = useState(false);
@@ -74,6 +76,10 @@ const App: React.FC = () => {
     setMeetingToEdit(meeting);
     setIsMeetingFormOpen(true);
   };
+  
+  const handleUpdateMeeting = (updatedMeeting: Meeting) => {
+    setMeetings(prev => prev.map(m => m.id === updatedMeeting.id ? updatedMeeting : m));
+  };
 
   const handleSaveMeeting = (meeting: Meeting) => {
     setMeetings(prev => {
@@ -94,27 +100,35 @@ const App: React.FC = () => {
   };
 
   // Data Management
-  const handleSaveToFile = () => {
+  const handleSaveToFile = async () => {
     const data = JSON.stringify({ contacts, meetings }, null, 2);
-    const blob = new Blob([data], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `scheduler-backup-${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+    if (window.electronAPI) { // Electron environment
+      try {
+        await window.electronAPI.saveFile(data);
+        alert('Data saved successfully!');
+      } catch (error) {
+        console.error("Failed to save data:", error);
+        alert('Failed to save data.');
+      }
+    } else { // Web environment
+      const blob = new Blob([data], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `scheduler-backup-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
   };
 
-  const handleRestoreFromFile = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
+  const handleRestoreFromFile = async () => {
     if (window.confirm("Are you sure you want to restore from this file? This will overwrite all current data.")) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
+        if (window.electronAPI) { // Electron environment
             try {
-                const result = e.target?.result;
-                if (typeof result === 'string') {
+                const result = await window.electronAPI.restoreFromFile();
+                if (result) {
                     const { contacts: newContacts, meetings: newMeetings } = JSON.parse(result);
                     if (Array.isArray(newContacts) && Array.isArray(newMeetings)) {
                         setContacts(newContacts);
@@ -125,14 +139,60 @@ const App: React.FC = () => {
                     }
                 }
             } catch (error) {
+                console.error("Failed to restore data:", error)
                 alert("Failed to restore data. The file might be corrupted or in the wrong format.");
             }
-        };
-        reader.readAsText(file);
+        } else { // Web environment
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'application/json';
+            input.onchange = (e) => {
+                const file = (e.target as HTMLInputElement).files?.[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (readerEvent) => {
+                        try {
+                            const result = readerEvent.target?.result;
+                            if (typeof result === 'string') {
+                                const { contacts: newContacts, meetings: newMeetings } = JSON.parse(result);
+                                if (Array.isArray(newContacts) && Array.isArray(newMeetings)) {
+                                    setContacts(newContacts);
+                                    setMeetings(newMeetings);
+                                    alert("Data restored successfully!");
+                                } else {
+                                    throw new Error("Invalid file format");
+                                }
+                            }
+                        } catch (error) {
+                            console.error("Failed to restore data:", error);
+                            alert("Failed to restore data. The file might be corrupted or in the wrong format.");
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            };
+            input.click();
+        }
     }
-    // Reset file input to allow re-uploading the same file
-    event.target.value = '';
   };
+
+  const filteredContacts = contacts.filter(contact =>
+    contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    contact.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const filteredMeetings = meetings.filter(meeting => {
+    const lowerCaseSearch = searchTerm.toLowerCase();
+    const topicMatch = meeting.topic.toLowerCase().includes(lowerCaseSearch);
+    const locationMatch = meeting.location.toLowerCase().includes(lowerCaseSearch);
+
+    const participantMatch = meeting.participantIds.some(pid => {
+        const participant = contacts.find(c => c.id === pid);
+        return participant && participant.name.toLowerCase().includes(lowerCaseSearch);
+    });
+
+    return topicMatch || locationMatch || participantMatch;
+  });
 
 
   return (
@@ -144,23 +204,28 @@ const App: React.FC = () => {
         onThemeChange={toggleTheme}
         onSaveToFile={handleSaveToFile}
         onRestoreFromFile={handleRestoreFromFile}
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
       />
       <main className="max-w-7xl mx-auto pb-12">
         {currentView === 'contacts' ? (
           <ContactList 
-            contacts={contacts} 
+            contacts={filteredContacts} 
             onAddContact={handleAddContact} 
             onEditContact={handleEditContact}
             onDeleteContact={handleDeleteContact}
+            searchTerm={searchTerm}
           />
         ) : (
           <MeetingList 
-            meetings={meetings} 
+            meetings={filteredMeetings} 
             contacts={contacts}
             onScheduleMeeting={handleScheduleMeeting}
             onEditMeeting={handleEditMeeting}
+            onUpdateMeeting={handleUpdateMeeting}
             onDeleteMeeting={handleDeleteMeeting}
             onComposeEmail={handleComposeEmail}
+            searchTerm={searchTerm}
           />
         )}
       </main>

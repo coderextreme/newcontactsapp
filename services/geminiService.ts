@@ -1,19 +1,12 @@
-
 import { GoogleGenAI } from "@google/genai";
-import { Contact, Meeting } from '../types';
+import type { Contact, Meeting } from '../types';
 
-const API_KEY = process.env.API_KEY;
+// The prompt guarantees process.env.API_KEY is available.
+// This single initialization works for both web and Electron environments.
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-if (!API_KEY) {
-  console.warn("Gemini API key not found. Please set the API_KEY environment variable.");
-}
-
-const ai = new GoogleGenAI({ apiKey: API_KEY });
 
 export const generateEmailInvitation = async (meeting: Meeting, participants: Contact[]): Promise<string> => {
-  if (!API_KEY) {
-    return "Hello,\n\nYou are invited to a meeting.\n\nTopic: [Meeting Topic]\nPlease see details below.\n\nBest regards,";
-  }
   
   const timezonesText = participants.map(p => {
     const participantDateTime = new Date(meeting.dateTime).toLocaleString('en-US', {

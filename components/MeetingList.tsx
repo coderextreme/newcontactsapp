@@ -1,4 +1,3 @@
-
 import React from 'react';
 import type { Meeting, Contact } from '../types';
 import MeetingCard from './MeetingCard';
@@ -8,11 +7,13 @@ interface MeetingListProps {
   contacts: Contact[];
   onScheduleMeeting: () => void;
   onEditMeeting: (meeting: Meeting) => void;
+  onUpdateMeeting: (meeting: Meeting) => void;
   onDeleteMeeting: (meetingId: string) => void;
   onComposeEmail: (meeting: Meeting) => void;
+  searchTerm: string;
 }
 
-const MeetingList: React.FC<MeetingListProps> = ({ meetings, contacts, onScheduleMeeting, onEditMeeting, onDeleteMeeting, onComposeEmail }) => {
+const MeetingList: React.FC<MeetingListProps> = ({ meetings, contacts, onScheduleMeeting, onEditMeeting, onUpdateMeeting, onDeleteMeeting, onComposeEmail, searchTerm }) => {
   const sortedMeetings = [...meetings].sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime());
 
   return (
@@ -30,13 +31,14 @@ const MeetingList: React.FC<MeetingListProps> = ({ meetings, contacts, onSchedul
       </div>
 
       {meetings.length > 0 ? (
-        <div className="space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
           {sortedMeetings.map(meeting => (
             <MeetingCard
               key={meeting.id}
               meeting={meeting}
               contacts={contacts}
               onEdit={onEditMeeting}
+              onUpdate={onUpdateMeeting}
               onDelete={onDeleteMeeting}
               onComposeEmail={onComposeEmail}
             />
@@ -44,16 +46,25 @@ const MeetingList: React.FC<MeetingListProps> = ({ meetings, contacts, onSchedul
         </div>
       ) : (
         <div className="text-center py-16 px-4 border-2 border-dashed border-light-border dark:border-dark-border rounded-lg">
-          <h3 className="text-xl font-medium text-light-text dark:text-dark-text">No meetings scheduled.</h3>
-          <p className="text-gray-500 dark:text-gray-400 mt-2">Time to plan your next conversation!</p>
-          <button
-            onClick={onScheduleMeeting}
-            disabled={contacts.length === 0}
-            className="mt-6 px-5 py-2.5 bg-secondary text-white font-semibold rounded-lg shadow-md hover:bg-secondary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary-light dark:focus:ring-offset-dark-bg transition-all disabled:bg-gray-400 disabled:cursor-not-allowed disabled:shadow-none"
-            title={contacts.length === 0 ? "You must add a contact first" : "Schedule a new meeting"}
-        >
-            Schedule a Meeting
-          </button>
+           {searchTerm ? (
+            <>
+              <h3 className="text-xl font-medium text-light-text dark:text-dark-text">No meetings found for "{searchTerm}"</h3>
+              <p className="text-gray-500 dark:text-gray-400 mt-2">Try a different search term.</p>
+            </>
+          ) : (
+            <>
+              <h3 className="text-xl font-medium text-light-text dark:text-dark-text">No meetings scheduled.</h3>
+              <p className="text-gray-500 dark:text-gray-400 mt-2">Time to plan your next conversation!</p>
+              <button
+                onClick={onScheduleMeeting}
+                disabled={contacts.length === 0}
+                className="mt-6 px-5 py-2.5 bg-secondary text-white font-semibold rounded-lg shadow-md hover:bg-secondary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary-light dark:focus:ring-offset-dark-bg transition-all disabled:bg-gray-400 disabled:cursor-not-allowed disabled:shadow-none"
+                title={contacts.length === 0 ? "You must add a contact first" : "Schedule a new meeting"}
+              >
+                Schedule a Meeting
+              </button>
+            </>
+          )}
         </div>
       )}
     </div>

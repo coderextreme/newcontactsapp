@@ -1,5 +1,4 @@
-
-import React, { useRef } from 'react';
+import React from 'react';
 import type { View, Theme } from '../types';
 import {
   ContactsIcon,
@@ -10,6 +9,7 @@ import {
   UploadIcon,
   CloudUploadIcon,
   CloudDownloadIcon,
+  SearchIcon,
 } from './icons';
 
 interface HeaderProps {
@@ -18,7 +18,9 @@ interface HeaderProps {
   theme: Theme;
   onThemeChange: () => void;
   onSaveToFile: () => void;
-  onRestoreFromFile: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onRestoreFromFile: () => void;
+  searchTerm: string;
+  onSearchChange: (term: string) => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -28,12 +30,9 @@ const Header: React.FC<HeaderProps> = ({
   onThemeChange,
   onSaveToFile,
   onRestoreFromFile,
+  searchTerm,
+  onSearchChange,
 }) => {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleRestoreClick = () => {
-    fileInputRef.current?.click();
-  };
 
   const navButtonClasses = (view: View) =>
     `flex items-center gap-2 px-4 py-2 rounded-md font-semibold transition-all duration-200 ${
@@ -46,9 +45,9 @@ const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className="sticky top-0 z-30 bg-light-card/80 dark:bg-dark-card/80 backdrop-blur-lg shadow-sm px-4 sm:px-6 py-3">
-      <div className="max-w-7xl mx-auto flex justify-between items-center">
+      <div className="max-w-7xl mx-auto flex justify-between items-center gap-4">
         {/* Left: App Title and Navigation */}
-        <div className="flex items-center gap-4 sm:gap-6">
+        <div className="flex items-center gap-4 sm:gap-6 flex-shrink-0">
           <h1 className="text-xl sm:text-2xl font-bold text-primary dark:text-primary-light">
             Scheduler
           </h1>
@@ -63,21 +62,32 @@ const Header: React.FC<HeaderProps> = ({
             </button>
           </nav>
         </div>
+        
+        {/* Middle: Search Bar */}
+        <div className="flex-1 min-w-0 max-w-md">
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <SearchIcon className="w-5 h-5 text-gray-400" />
+            </div>
+            <input
+              type="search"
+              name="search"
+              id="search"
+              className="block w-full pl-10 pr-3 py-2 border border-light-border dark:border-dark-border rounded-md leading-5 bg-light-bg dark:bg-dark-bg text-light-text dark:text-dark-text placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:placeholder-gray-400 dark:focus:placeholder-gray-500 focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
+              placeholder={`Search ${currentView}...`}
+              value={searchTerm}
+              onChange={(e) => onSearchChange(e.target.value)}
+            />
+          </div>
+        </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
           <button className={iconButtonClasses} onClick={onSaveToFile} title="Save to File">
             <SaveIcon />
           </button>
-          <button className={iconButtonClasses} onClick={handleRestoreClick} title="Restore from File">
+          <button className={iconButtonClasses} onClick={onRestoreFromFile} title="Restore from File">
             <UploadIcon />
-            <input
-              type="file"
-              ref={fileInputRef}
-              className="hidden"
-              accept=".json"
-              onChange={onRestoreFromFile}
-            />
           </button>
           <div className="w-px h-6 bg-light-border dark:bg-dark-border mx-1"></div>
           <button className={iconButtonClasses} onClick={() => alert('Server backup is a placeholder feature.')} title="Save to Cloud (Placeholder)">

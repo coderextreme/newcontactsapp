@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import type { Contact, Socials } from '../types';
 import { TIMEZONES } from '../constants';
@@ -60,7 +59,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ isOpen, onClose, onSave, cont
     onClose();
   };
 
-  const renderSocialInput = (name: keyof Socials, placeholder: string, type: string = "text") => (
+  const renderSocialInput = (name: keyof Socials, placeholder: string, type: string = "text", helpText?: string) => (
     <div>
       <label htmlFor={name} className="block text-sm font-medium text-gray-700 dark:text-gray-300 capitalize">{name}</label>
       <input
@@ -72,6 +71,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ isOpen, onClose, onSave, cont
         placeholder={placeholder}
         className="mt-1 block w-full bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm text-light-text dark:text-dark-text"
       />
+      {helpText && <p className="text-xs text-gray-500 mt-1">{helpText}</p>}
     </div>
   );
   
@@ -119,8 +119,8 @@ const ContactForm: React.FC<ContactFormProps> = ({ isOpen, onClose, onSave, cont
             {renderSocialInput("twitter", "Username")}
             {renderSocialInput("linkedin", "Profile URL", "url")}
             {renderSocialInput("github", "Username")}
-            {renderSocialInput("messenger", "Username")}
-            {renderSocialInput("discord", "user#1234")}
+            {renderSocialInput("messenger", "Username (for m.me links)")}
+            {renderSocialInput("discord", "User ID (e.g., 12345...)", "text", "Enable Developer Mode, right-click user, and 'Copy User ID'.")}
             {renderSocialInput("zoom", "Personal Meeting ID or link")}
         </div>
         <div className="flex justify-end gap-3 pt-4">

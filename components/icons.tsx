@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 type IconProps = {
@@ -117,4 +116,10 @@ export const ZoomIcon: React.FC<IconProps> = ({ className = 'w-5 h-5' }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor">
         <path d="M12,2A10,10,0,1,0,22,12,10,10,0,0,0,12,2Zm3.71,7.29a1,1,0,0,1,0,1.42L12.5,13.92a1,1,0,0,1-1.42,0l-3.21-3.21a1,1,0,0,1,1.42-1.42L11.5,11.79l2.79-2.79A1,1,0,0,1,15.71,9.29ZM8.29,14.71a1,1,0,1,1-1.42-1.42L9.58,10.58a1,1,0,0,1,1.42,0l3.21,3.21a1,1,0,0,1-1.42,1.42L10.5,12.92Z" />
     </svg>
+);
+
+export const SearchIcon: React.FC<IconProps> = ({ className = 'w-6 h-6' }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+  </svg>
 );

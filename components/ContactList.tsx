@@ -1,4 +1,3 @@
-
 import React from 'react';
 import type { Contact } from '../types';
 import ContactCard from './ContactCard';
@@ -8,9 +7,10 @@ interface ContactListProps {
   onAddContact: () => void;
   onEditContact: (contact: Contact) => void;
   onDeleteContact: (contactId: string) => void;
+  searchTerm: string;
 }
 
-const ContactList: React.FC<ContactListProps> = ({ contacts, onAddContact, onEditContact, onDeleteContact }) => {
+const ContactList: React.FC<ContactListProps> = ({ contacts, onAddContact, onEditContact, onDeleteContact, searchTerm }) => {
   return (
     <div className="p-4 sm:p-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -36,14 +36,23 @@ const ContactList: React.FC<ContactListProps> = ({ contacts, onAddContact, onEdi
         </div>
       ) : (
         <div className="text-center py-16 px-4 border-2 border-dashed border-light-border dark:border-dark-border rounded-lg">
-          <h3 className="text-xl font-medium text-light-text dark:text-dark-text">No contacts yet!</h3>
-          <p className="text-gray-500 dark:text-gray-400 mt-2">Get started by adding your first contact.</p>
-          <button
-            onClick={onAddContact}
-            className="mt-6 px-5 py-2.5 bg-secondary text-white font-semibold rounded-lg shadow-md hover:bg-secondary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary-light dark:focus:ring-offset-dark-bg transition-all"
-          >
-            Add a Contact
-          </button>
+          {searchTerm ? (
+            <>
+              <h3 className="text-xl font-medium text-light-text dark:text-dark-text">No contacts found for "{searchTerm}"</h3>
+              <p className="text-gray-500 dark:text-gray-400 mt-2">Try a different search term.</p>
+            </>
+          ) : (
+            <>
+              <h3 className="text-xl font-medium text-light-text dark:text-dark-text">No contacts yet!</h3>
+              <p className="text-gray-500 dark:text-gray-400 mt-2">Get started by adding your first contact.</p>
+              <button
+                onClick={onAddContact}
+                className="mt-6 px-5 py-2.5 bg-secondary text-white font-semibold rounded-lg shadow-md hover:bg-secondary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary-light dark:focus:ring-offset-dark-bg transition-all"
+              >
+                Add a Contact
+              </button>
+            </>
+          )}
         </div>
       )}
     </div>
